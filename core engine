@@ -1,0 +1,272 @@
+```javascript
+const canvas = document.getElementById("game")
+const ctx = canvas.getContext("2d")
+
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
+
+const gravity = .6
+
+let input = {
+left:false,
+right:false,
+jump:false,
+attack:false
+}
+
+function bind(id,key){
+
+let b=document.getElementById(id)
+
+b.ontouchstart=()=>input[key]=true
+b.ontouchend=()=>input[key]=false
+
+}
+
+bind("left","left")
+bind("right","right")
+bind("jump","jump")
+bind("attack","attack")
+
+class Player{
+
+constructor(){
+
+this.x=200
+this.y=0
+this.w=30
+this.h=40
+
+this.vx=0
+this.vy=0
+
+this.hearts=5
+this.attackTimer=0
+
+this.facing=1
+this.onGround=false
+
+}
+
+update(){
+
+if(input.left){
+this.vx=-4
+this.facing=-1
+}
+
+else if(input.right){
+this.vx=4
+this.facing=1
+}
+
+else{
+this.vx*=.8
+}
+
+if(input.jump && this.onGround){
+this.vy=-12
+}
+
+if(input.attack && this.attackTimer<=0){
+this.attackTimer=15
+}
+
+this.vy+=gravity
+
+this.x+=this.vx
+this.y+=this.vy
+
+this.onGround=false
+
+for(let p of platforms){
+
+if(
+this.x<p.x+p.w &&
+this.x+this.w>p.x &&
+this.y+this.h<p.y+10 &&
+this.y+this.h+this.vy>=p.y
+){
+this.y=p.y-this.h
+this.vy=0
+this.onGround=true
+}
+
+}
+
+if(this.attackTimer>0)this.attackTimer--
+
+}
+
+attackBox(){
+
+if(this.attackTimer<=0)return null
+
+return{
+x:this.facing==1?this.x+this.w:this.x-25,
+y:this.y+12,
+w:25,
+h:8
+}
+
+}
+
+draw(){
+
+ctx.fillStyle="black"
+ctx.fillRect(this.x,this.y,this.w,this.h)
+
+let s=this.attackBox()
+
+if(s){
+ctx.fillRect(s.x,s.y,s.w,s.h)
+}
+
+}
+
+}
+
+class Enemy{
+
+constructor(x,y){
+
+this.x=x
+this.y=y
+
+this.w=28
+this.h=28
+this.health=2
+
+}
+
+update(){
+
+if(player.x<this.x)this.x-=1
+else this.x+=1
+
+}
+
+draw(){
+
+if(this.health<=0)return
+
+ctx.fillRect(this.x,this.y,this.w,this.h)
+
+}
+
+}
+
+let player = new Player()
+
+let platforms=[{x:-500,y:canvas.height-50,w:5000,h:50}]
+
+let enemies=[]
+let coins=[]
+
+let cameraX=0
+let score=0
+
+for(let i=0;i<15;i++){
+
+let x=400+i*220
+
+platforms.push({
+x:x,
+y:canvas.height-150-Math.random()*120,
+w:120,
+h:20
+})
+
+enemies.push(new Enemy(x+40,canvas.height-80))
+
+coins.push({
+x:x+60,
+y:canvas.height-180,
+size:10,
+collected:false
+})
+
+}
+
+function rect(a,b){
+
+return(
+a.x<b.x+b.w &&
+a.x+a.w>b.x &&
+a.y<b.y+b.h &&
+a.y+a.h>b.y
+)
+
+}
+
+function loop(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+player.update()
+
+cameraX=player.x-200
+
+ctx.save()
+
+ctx.translate(-cameraX,0)
+
+for(let p of platforms){
+
+ctx.fillStyle="black"
+ctx.fillRect(p.x,p.y,p.w,p.h)
+
+}
+
+let atk=player.attackBox()
+
+for(let e of enemies){
+
+if(e.health<=0)continue
+
+e.update()
+
+if(atk && rect(atk,e)){
+e.health--
+}
+
+if(rect(player,e)){
+player.hearts--
+}
+
+e.draw()
+
+}
+
+for(let c of coins){
+
+if(!c.collected &&
+rect(player,{x:c.x,y:c.y,w:c.size,h:c.size})){
+
+c.collected=true
+score++
+
+}
+
+if(!c.collected){
+ctx.fillRect(c.x,c.y,c.size,c.size)
+}
+
+}
+
+player.draw()
+
+ctx.restore()
+
+ctx.fillStyle="black"
+
+ctx.font="20px Arial"
+ctx.fillText("Coins: "+score,20,30)
+ctx.fillText("Hearts: "+player.hearts,20,60)
+
+requestAnimationFrame(loop)
+
+}
+
+loop()
+```
