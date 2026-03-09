@@ -1,0 +1,7 @@
+cd path/to/shadowblade
+git init
+git add .
+git commit -m "Initial commit of Shadow Blade"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/shadowblade.git
+git push -u origin main
