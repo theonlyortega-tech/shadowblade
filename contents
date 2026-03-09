@@ -1,0 +1,13 @@
+shadowblade/
+├ index.html
+├ main.js
+├ player.js
+├ enemies.js
+├ boss.js
+├ world.js
+├ inventory.js
+├ dialogue.js
+├ npcs.js
+├ ads.js
+├ save.js
+├ ui.js
